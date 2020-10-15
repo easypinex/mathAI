@@ -4,6 +4,14 @@ from sympy import *
 # 根据一颗解析树计算表达式的值,每一个节点有不同的行为，因此需要对每一种节点类型定义处理办法
 
 def calculate(node):
+    '''計算
+    
+    Args:
+        node (dict): {  
+            'type' :number (NODE_TYPE),
+            'structure' :list
+        }
+    '''
     value = 0
     if isinstance(node,dict) and len(node):
         child = node['structure']
