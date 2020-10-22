@@ -5,10 +5,18 @@ import config
 # from outlier_detector import *
 # 识别非黏连的字符，比如i、=、除号
 def detect_uncontinous_symbols(symbols,original_img):
+    '''識別筆畫分開的字符, 例如i、=、除法
+            程式初步判斷、嘗試將字符組合並模型預測, 符合非連接字符則合成
+    Args:
+        symbols (list): [{'location': (x, y , 原始寬, 原始高), ...]
+        original_img (array): 原始圖片
+    Return:
+        symbols (list): 將判斷相連的字符合成，並返回完整字符　[{'location': (x, y , 原始寬, 原始高), ...]
+    '''
     # 先对symbols垂直投影
     # 然后垂直投影
     for projection_type in range(1):
-        projection = tools.get_projection(symbols,projection_type)
+        projection = tools.get_projection(symbols,projection_type) # 獲取每個字符的x起點與終點
         # print('projection',projection)
         # 根据投影对symbols进行分割
         # 对于每一个分割，获得在这个分割里面的symbols
@@ -17,6 +25,7 @@ def detect_uncontinous_symbols(symbols,original_img):
         for line_segment in projection:
             # 确定属于line_segment的symbols
             start_index = end_index
+            # 像素
             for end_index in range(start_index, len(locations)):
                 x11, x12 = locations[end_index][projection_type], locations[end_index][projection_type] + locations[end_index][projection_type + 2]
                 x21, x22 = line_segment[0], line_segment[1]
@@ -36,6 +45,12 @@ def detect_uncontinous_symbols(symbols,original_img):
                 location = tools.join_locations(location_segment)
                 # 从原图提取待识别的图片
                 extracted_img = tools.extract_img(location,original_img)
+
+                # import matplotlib.pyplot as plt
+                # plt.subplot(3,3,1)
+                # plt.imshow(extracted_img, cmap='gray')
+                # plt.show()
+
                 # 识别字符 这里每次都需要calling model，可以进一步优化
                 predict_input_fn = tf.estimator.inputs.numpy_input_fn(
                     x={"x":tools.normalize_matrix_value([extracted_img]+sub_symbol)},
@@ -57,7 +72,7 @@ def detect_uncontinous_symbols(symbols,original_img):
                         # print('yesssssss',characters[2]['candidates'][0]['symbol'],characters[1]['candidates'][0]['symbol'].isdigit(),characters[3]['candidates'][0]['symbol'].isdigit())
                         # 除号必须有三个字符构成，还要判断子字符包不包含数字，如果包含数字，则不能合并为整体
                         if recognized_symbol == 'div' and len(characters) == 4 and \
-                                characters[2]['candidates'][0]['symbol'] in ['-',',','point'] and \
+                                characters[2]['candidates'][0]['symbol'] in ['-',',','point','times'] and \
                                 characters[1]['candidates'][0]['symbol'].isdigit() == False and \
                                 characters[3]['candidates'][0]['symbol'].isdigit() == False:
                             joined_symbol = {'location': location, 'src_img': extracted_img}

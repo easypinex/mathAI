@@ -3,9 +3,10 @@
 由easypinex基於https://github.com/Roujack/mathAI/進行修改
 
 執行環境:
+ - python 3.7
+ - opencv (請盡量單獨安裝 , 單獨安裝還是不行請安裝 https://support.microsoft.com/zh-tw/help/2977003/the-latest-supported-visual-c-downloads)
  - tensorflow-gpu==1.15.0
  - matplotlib
- - opencv
  - scikit-image
  - sympy
 

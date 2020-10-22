@@ -7,8 +7,20 @@ from config import IMG_SIZE,FILELIST,MODEL_DIR,\
 from matplotlib import pyplot as plot
 
 
-#读取图片并将图片转化成二值图,返回原彩色图和二值图
 def read_img_and_convert_to_binary(filename):
+    '''讀取圖片並將圖片做前處理, 返回原彩色圖和黑白(0/1)圖, 大小倍率透過 config.SCALSIZE 進行調整
+    包含去雜訊、灰階、黑白化(0與1)
+
+    Args:
+        filename (str): 絕對 / 相對圖片完整路徑 ex: './testImgs/easy +/3.jpg'
+
+    Attributes:
+        config.SCALSIZE (number): 圖片倍率
+
+    Return:
+        original_img (array): 原圖 (b,g,r)
+        binary_img (array): 黑白圖
+    '''
     #读取待处理的图片
     original_img = cv2.imread(filename)
     # print(original_img)
@@ -25,14 +37,22 @@ def read_img_and_convert_to_binary(filename):
     kernel2 = np.ones((3,3), np.uint8)
     opening = cv2.dilate(opening, kernel2, iterations=1)
     # Otsu's thresholding after Gaussian filtering
-    # 采用otsu阈值法将灰度图转化成只有0和1的二值图
+    # 采用otsu阈值法将灰度图转化成只有0和1的黑白图
     blur = cv2.GaussianBlur(opening,(13,13),0)
     #ret, binary_img = cv2.threshold(img_gray, 120, 1, cv2.THRESH_BINARY_INV)
     ret,binary_img = cv2.threshold(blur,0,1,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
     return original_img,binary_img
 
-# 从img截取location区域的图像，并归一化成IMG_SIZE*IMG_SIZE
 def extract_img(location,img,contour=None):
+    '''從img截取location區域的圖像，並縮放大小成IMG_SIZE*IMG_SIZE
+    
+    Args:
+        location (tuple): 字符位置(x,y,寬,高) 
+        img (array): 黑白圖片
+        contour (array): 字符輪廓座標 , 如果為None 則單純裁切位置, 反之會過濾輪廓以外的雜訊
+    Return:
+        extracted_img (array): 已經縮放IMG_SIZE*IMG_SIZE的字符圖
+    '''
     x,y,w,h=location
     # 只提取轮廓内的字符
     if contour is None:
@@ -42,7 +62,7 @@ def extract_img(location,img,contour=None):
         cv2.drawContours(mask, [contour], -1, 255, cv2.FILLED)
         img_after_masked = cv2.bitwise_and(mask, img)
         extracted_img = img_after_masked[y:y + h, x:x + w]
-    # 将提取出的img归一化成IMG_SIZE*IMG_SIZE大小的二值图
+    # 将提取出的img归一化成IMG_SIZE*IMG_SIZE大小的黑白图
     black = np.zeros((IMG_SIZE, IMG_SIZE), np.uint8)
     if (w > h):
         res = cv2.resize(extracted_img, (IMG_SIZE, (int)(h * IMG_SIZE / w)), interpolation=cv2.INTER_AREA)
@@ -56,8 +76,18 @@ def extract_img(location,img,contour=None):
     extracted_img = np.logical_not(extracted_img)
     return extracted_img
 
-#将二值图里面的字符切割成单个字符，返回三维数组，每一个元素是一个字典，包含字符所在位置大小location，以及字符切割图src_img
 def binary_img_segment(binary_img,original_img=None):
+    '''將黑白圖裡面的字符切割成單個字符，返回三維數組，每一個字符是一個dict，包含字符所在位置大小location，以及字符切割黑白圖src_img ()
+    Args:
+        binary_img (array): 黑白圖
+        original_img (array): 原始圖片
+    Retunn:
+        symbols (list): 每個經縮放後的字符圖
+            字符格式為:{'location': x, y , 原始寬, 原始高,'src_img': array([...])}
+            例如:
+                [{'location': (39, 40, 17, 100), 'src_img': array([[ True,  True...,  True]])},
+                {'location': (83, 54, 75, 86), 'src_img': array([[ True,  True...,  True]])}, ...]
+    '''
     # binary_img = skeletonize(binary_img)
     # plot.imshow( binary_img,cmap = 'gray', interpolation = 'bicubic')
     # plot.show()

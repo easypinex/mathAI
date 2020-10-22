@@ -19,13 +19,13 @@ from calculator import *
 
 
 #test
-original_img, binary_img = read_img_and_convert_to_binary('./testImgs/easy +/3.jpg')
+original_img, binary_img = read_img_and_convert_to_binary('./testImgs/easy div/28.jpg')
 
 symbols = binary_img_segment(binary_img,original_img)
 symbols = process.detect_uncontinous_symbols(symbols,binary_img)
-length = len(symbols)
-column = length/3+1
-index = 1
+
+# column = len(symbols)/3+1
+# index = 1
 # for symbol in symbols:
 #     # print(symbol)
 #     plt.subplot(column,3,index)
@@ -84,8 +84,9 @@ print(parser_tree['value'])
 #
 # print('转化成的latex语句:')
 #
+# expression_str = r'$result:'+latex_str+'='+'$'
 expression_str = r'$result:'+latex_str+'='+latex(parser_tree['value'])+'$'
-print(expression_str)
+print('识别的表达式：',expression_str)
 import os
 if not os.path.exists('./result'):
     os.mkdir('./result')

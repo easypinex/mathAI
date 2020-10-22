@@ -121,8 +121,8 @@ def verify_spatial_relationship(rect,rects,specified_relationship):
             return True
     return False
 
-# 从cnn分类器返回的结果中返回前n个概率最大的字符
 def get_candidates(estimated_probabilities):
+    '''从cnn分类器返回的结果中返回前n个概率最大的字符'''
     indexes_of_top_n_largest_probability = np.argsort(-estimated_probabilities)[:NUM_OF_CANDIDATES]
     candidates = []
     for i in range(NUM_OF_CANDIDATES):
@@ -130,17 +130,25 @@ def get_candidates(estimated_probabilities):
         candidates.append({'symbol':FILELIST[index],'probability':estimated_probabilities[index]})
     return candidates
 
-# 获取投影 projection_type = 0|竖直投影 1|水平投影
+# 
 def get_projection(characters,projection_type):
-    locations = [x['location'] for x in characters]
+    '''獲得每個字符x或y的起點與終點
+    Args:
+        characters (list): [{'location': (x, y , 原始寬, 原始高) , ...]
+        projection_type (int): 要判斷x還是y
+    Return:
+        projection (list)): 返回每個字幅x或y的起點與終點, 
+            ex: [[39, 56], [83, 158], [185, 273], [307, 351], [362, 417]]
+    '''
+    locations = [x['location'] for x in characters] # [(x,y,原始寬, 原始高), ...]
     i = projection_type
-    projection = [[locations[0][i], locations[0][i] + locations[0][i + 2]]]
+    projection = [[locations[0][i], locations[0][i] + locations[0][i + 2]]] # 第一個字符的 x(y) 點, 字符的結束x(y點)
     for location in locations:
         # print(location)
         start = location[i]
         end = location[i] + location[i + 2]
-        line_segment1 = [start, end]
-        line_segment2 = projection[-1]
+        line_segment1 = [start, end] # 字符x起始,與x結束 
+        line_segment2 = projection[-1] # 最後一個字符x起始,與x結束 
         # 思路跟空闲盘块的回收类似
         # print(line_segment1,line_segment2)
         # 判定线段（start，end）与线段e的关系
